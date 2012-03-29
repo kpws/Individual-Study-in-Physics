@@ -11,7 +11,7 @@ def smooth(data,amount):
     for i in range(len(data)):
         tot=0.0
         for j in range(amount*2+1):
-            if i+j-amount>0 and i+j-amount<len(data):
+            if i+j-amount>=0 and i+j-amount<len(data):
                 smoothedData[i]+=kernel[j]*data[i+j-amount]
                 tot+=kernel[j]
         smoothedData[i]/=tot
