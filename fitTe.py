@@ -24,37 +24,42 @@ end=[523.0,125.0,355.0]
 left=[[478.0,85.0,315.0]]*4
 right=[[499.0,110.0,340.0]]*4
 
-guessShift=1.7
+guessShift=[1.6,1.6,1.0,0.5,0.0]
 peaks=[]
 colors=['red','green','blue','cyan','magenta','yellow','black']
 fits=pl.figure().add_subplot(111)
 fits.hold(True)
-for e in end+start+left[0]+right[0]:
-    pl.plot([e,e],[0,2e6],'gray')
+#for e in end+start+left[0]+right[0]:
+#    pl.plot([e,e],[0,2e6],'gray')
 for i in range(len(samples)):
     samplePeaks=[]
-    for j in range(len(elements)):
+    for j in [0]:
         r=AugerRun(sources[i][j][0],part=sources[i][j][1])
-        guess=refPeaks[j]+guessShift
+        guess=refPeaks[j]+guessShift[i]
         print(j)
-        (params,relHeights,fitE,fitCounts,EError)=fitPeaks(r,
+        (params,relHeights,fitE,base,EError)=fitPeaks(r,
                 guess,left[i][j],right[i][j],
                 start=start[j],end=end[j])
         samplePeaks.append([[params[t*3],relHeights[t]] for t in range(len(guess))])
-        shift=-guessShift-EError
+        #shift=-guessShift-EError
         #print('Results agree best when '+str(shift)+' eV are added to our AES peaks:')
         #for p in range(len(guess)):
         #    print('Peak at: '+str(params[p*3]+shift)+
         #            ' eV, ref: '+str(refPeaks[j][p])+' eV')
-        fits.plot(r.E,r.countsPerSec,linewidth=2,color=colors[i],label=(samples[i]
+        scale=1/base[0]
+        shift=0.25*i
+        fits.plot(r.E,shift+r.countsPerSec*scale,linewidth=2,color=colors[i],label=(samples[i]
             if j==0 else ''))
-        fits.plot(fitE,fitCounts,linewidth=1,color='black',label=('Fit around '
-                +elements[j]+' peaks' if i==0 else ''))
+        tableString=""
+        for p in range(len(guess)):
+            fits.plot(fitE,shift+(base+abs(params[p*3+2])*np.exp(-((fitE-params[p*3])/params[p*3+1])**2))*scale,linewidth=1,color='black')
+            tableString+=" & "+str(round((params[p*3]-2.4)*10)/10)
+        print(tableString)
+        print(params[3*3+1])
     peaks.append(samplePeaks)
-fits.legend(loc=2)
-pl.title('spectra and peak fittings')
-pl.xlabel('energy [eV]')
-pl.ylabel('count rate [s$^{-1}$]')
+#fits.legend(loc=2)
+pl.xlabel('Energy [eV]')
+pl.ylabel('Normalized count rate')
 if False:
     ax2=pl.figure().add_subplot(111)
     width=0.25
